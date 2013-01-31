@@ -1406,7 +1406,7 @@ static int do_poll_ioctl(struct comedi_device *dev, unsigned int arg,
 
 	if (arg >= dev->n_subdevices)
 		return -EINVAL;
-	s = dev->subdevices + arg;
+	s = &dev->subdevices[arg];
 
 	if (s->lock && s->lock != file)
 		return -EACCES;
@@ -1421,6 +1421,101 @@ static int do_poll_ioctl(struct comedi_device *dev, unsigned int arg,
 		return s->poll(dev, s);
 
 	return -EINVAL;
+
+}
+
+static long comedi_unlocked_ioctl(struct file *file, unsigned int cmd,
+				  unsigned long arg)
+{
+	const unsigned minor = iminor(file->f_dentry->d_inode);
+	struct comedi_file_info *info = comedi_file_info_from_minor(minor);
+	struct comedi_device *dev = comedi_dev_from_file_info(info);
+	int rc;
+
+	if (!dev)
+		return -ENODEV;
+
+	mutex_lock(&dev->mutex);
+
+	/* Device config is special, because it must work on
+	 * an unconfigured device. */
+	if (cmd == COMEDI_DEVCONFIG) {
+		if (minor >= COMEDI_NUM_BOARD_MINORS) {
+			/* Device config not appropriate on non-board minors. */
+			rc = -ENOTTY;
+			goto done;
+		}
+		rc = do_devconfig_ioctl(dev,
+					(struct comedi_devconfig __user *)arg);
+		if (rc == 0)
+			/* Evade comedi_auto_unconfig(). */
+			info->hardware_device = NULL;
+		goto done;
+	}
+
+	if (!dev->attached) {
+		DPRINTK("no driver configured on /dev/comedi%i\n", dev->minor);
+		rc = -ENODEV;
+		goto done;
+	}
+
+	switch (cmd) {
+	case COMEDI_BUFCONFIG:
+		rc = do_bufconfig_ioctl(dev,
+					(struct comedi_bufconfig __user *)arg);
+		break;
+	case COMEDI_DEVINFO:
+		rc = do_devinfo_ioctl(dev, (struct comedi_devinfo __user *)arg,
+				      file);
+		break;
+	case COMEDI_SUBDINFO:
+		rc = do_subdinfo_ioctl(dev,
+				       (struct comedi_subdinfo __user *)arg,
+				       file);
+		break;
+	case COMEDI_CHANINFO:
+		rc = do_chaninfo_ioctl(dev, (void __user *)arg);
+		break;
+	case COMEDI_RANGEINFO:
+		rc = do_rangeinfo_ioctl(dev, (void __user *)arg);
+		break;
+	case COMEDI_BUFINFO:
+		rc = do_bufinfo_ioctl(dev,
+				      (struct comedi_bufinfo __user *)arg,
+				      file);
+		break;
+	case COMEDI_LOCK:
+		rc = do_lock_ioctl(dev, arg, file);
+		break;
+	case COMEDI_UNLOCK:
+		rc = do_unlock_ioctl(dev, arg, file);
+		break;
+	case COMEDI_CANCEL:
+		rc = do_cancel_ioctl(dev, arg, file);
+		break;
+	case COMEDI_CMD:
+		rc = do_cmd_ioctl(dev, (struct comedi_cmd __user *)arg, file);
+		break;
+	case COMEDI_CMDTEST:
+		rc = do_cmdtest_ioctl(dev, (struct comedi_cmd __user *)arg,
+				      file);
+		break;
+	case COMEDI_INSNLIST:
+		rc = do_insnlist_ioctl(dev,
+				       (struct comedi_insnlist __user *)arg,
+				       file);
+		break;
+	case COMEDI_INSN:
+		rc = do_insn_ioctl(dev, (struct comedi_insn __user *)arg,
+				   file);
+		break;
+	case COMEDI_POLL:
+		rc = do_poll_ioctl(dev, arg, file);
+		break;
+	default:
+		rc = -ENOTTY;
+		break;
+	}
 }
 
 static int do_cancel(struct comedi_device *dev, struct comedi_subdevice *s)
