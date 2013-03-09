@@ -335,8 +335,6 @@ static int rx_submit (struct usbnet *dev, struct urb *urb, gfp_t flags)
 		usb_free_urb (urb);
 		return -ENOMEM;
 	}
-	if (net_ip_align)
-		skb_reserve (skb, net_ip_align);
 
 	entry = (struct skb_data *) skb->cb;
 	entry->urb = urb;
