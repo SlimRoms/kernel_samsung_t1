@@ -68,7 +68,7 @@
 
 struct cptk_data *cptk_local;
 struct timer_list touch_led_timer;
-int touch_led_timeout = 3; // timeout for the touchkey backlight in secs
+int touch_led_timeout = 2; // timeout for the touchkey backlight in secs
 int touch_led_disabled = 0; // 1= force disable the touchkey backlight
 
 static void touch_led_enable(struct cptk_data *cptk);
