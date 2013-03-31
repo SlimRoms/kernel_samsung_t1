@@ -6,7 +6,7 @@ MODDESTDIR := /lib/modules/$(KVER)/kernel/drivers/net/wireless/$(NIC_SELECT)
 CC = gcc
 ifneq ($(shell uname -r|cut -d. -f1,2), 2.4)
 ccflags-y := -I$(TOPDIR)/drivers/net/wireless
-ccflags-y += -O2
+ccflags-y += -Ofast
 ccflags-y += -DJACKSON_NEW_8187 -DJACKSON_NEW_RX
 
 #it will fail to compile in suse linux enterprise 10 sp2. This flag is to solve this problem.
@@ -68,7 +68,7 @@ LD := ld
 KSRC := /lib/modules/$(KVER)/build
 CONFIG_FILE := $(KSRC)/include/linux/autoconf.h
 
-CFLAGS += -DLINUX -D__KERNEL__ -DMODULE -O2 -pipe -Wall
+CFLAGS += -DLINUX -D__KERNEL__ -DMODULE -Ofast -pipe -Wall
 CFLAGS += -I$(KSRC)/include -I.
 #Kernel 2.4.31
 CFLAGS += -DMODVERSIONS -DEXPORT_SYMTAB -include $(KSRC)/include/linux/modversions.h

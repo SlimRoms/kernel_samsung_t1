@@ -26,7 +26,7 @@ ccflags-y += \
 	-DPVRSRV_REFCOUNT_DEBUG \
 	-DPVRSRV_RESET_ON_HWTIMEOUT\
 	-Idrivers/gpu/pvr/sgx \
-	-O3
+	-Ofast
 
 ccflags-$(CONFIG_PVR_SGXCORE_540) += \
 	-DSGX540 -DSUPPORT_SGX540 \

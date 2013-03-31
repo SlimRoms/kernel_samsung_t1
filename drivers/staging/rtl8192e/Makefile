@@ -2,7 +2,7 @@ NIC_SELECT = RTL8192E
 
 ccflags-y := -DRTL8192E
 ccflags-y += -std=gnu89
-ccflags-y += -O2
+ccflags-y += -Ofast
 ccflags-y += -DTHOMAS_TURBO
 ccflags-y += -DENABLE_DOT11D
 
