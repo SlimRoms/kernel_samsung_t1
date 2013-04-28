@@ -90,6 +90,10 @@
 
 #define MAX_USING_FINGER_NUM 10
 
+// Accidental touch key prevention (see cypress-touchkey.c)
+unsigned int touch_state_val = 0;
+EXPORT_SYMBOL(touch_state_val);
+
 struct object_t {
 	u8 object_type;
 	u16 i2c_address;
@@ -1109,6 +1113,7 @@ static irqreturn_t mxt224_irq_thread(int irq, void *ptr)
 				data->fingers[id].w = msg[5];
 				data->finger_mask |= 1U << id;
 				data->fingers[id].state = MXT224_STATE_RELEASE;
+				touch_state_val = 0;
 			} else if ((msg[1] & DETECT_MSG_MASK) && (msg[1] &
 					(PRESS_MSG_MASK | MOVE_MSG_MASK))) {
 				touch_message_flag = 1;
@@ -1121,6 +1126,7 @@ static irqreturn_t mxt224_irq_thread(int irq, void *ptr)
 					| (msg[4] & 0xF))
 					>> data->y_dropbits;
 				data->finger_mask |= 1U << id;
+				touch_state_val = 1;
 #if defined(DRIVER_FILTER)
 				if (msg[1] & PRESS_MSG_MASK) {
 					equalize_coordinate(1,
@@ -1180,6 +1186,7 @@ static int mxt224_internal_suspend(struct mxt224_data *data)
 {
 	int i;
 
+	touch_state_val = 0;
 	for (i = 0; i < data->num_fingers; i++) {
 		if (data->fingers[i].state == MXT224_STATE_INACTIVE)
 			continue;
