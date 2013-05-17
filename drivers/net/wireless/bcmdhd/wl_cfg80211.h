@@ -143,6 +143,7 @@ do {									\
 #endif				/* (WL_DBG_LEVEL > 0) */
 #define WL_PNO(x)
 
+#define	WL_PNO(args)
 
 #define WL_SCAN_RETRY_MAX	3
 #define WL_NUM_PMKIDS_MAX	MAXPMKID
